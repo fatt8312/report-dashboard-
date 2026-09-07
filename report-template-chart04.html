@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงานกองทุน | กลุ่มงานสุขภาพดิจิทัล โรงพยาบาลลำทับ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="report-template-chart04.css?v=3">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <img src="logohose.png" alt="Logo">
+      </div>
+      <div class="brand-text">
+        <div>กลุ่มงานสุขภาพดิจิทัล</div>
+        <div>โรงพยาบาลลำทับ</div>
+      </div>
+    </div>
+    <div class="nav-group" id="navGroup"></div>
+    <div class="sidebar-foot">
+      <div class="gear-btn" id="settingsBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>เชื่อมต่อแหล่งข้อมูล</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="fileProtocolWarning" style="display:none;background:#fbeada;border:1px solid #e2954a;color:#a5631d;
+      border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;line-height:1.7;">
+      ⚠️ <b>ตอนนี้เปิดไฟล์นี้แบบ <code class="mono">file://</code> (ดับเบิลคลิกจากเครื่อง)</b> — เบราว์เซอร์จะบล็อกการเชื่อมต่อออกไปหา Google Sheet โดยอัตโนมัติ ทำให้ขึ้น "Failed to fetch" เสมอ ไม่เกี่ยวกับการตั้งค่าแชร์ของชีต<br>
+      วิธีแก้: 1) อัปโหลดไฟล์นี้ขึ้นเซิร์ฟเวอร์เว็บของโรงพยาบาล (ที่จะให้ปุ่ม Report ลิงก์ไปหาจริง) แล้วเปิดผ่าน http/https จะใช้งานได้ปกติ หรือ 2) ทดสอบก่อนตอนนี้ด้วยการรันเซิร์ฟเวอร์เล็กๆ ในเครื่อง เช่นเปิด Command Prompt ในโฟลเดอร์ที่เก็บไฟล์แล้วพิมพ์ <code class="mono">python -m http.server 8000</code> แล้วเปิด <code class="mono">http://localhost:8000/report-template-live.html</code> แทนการดับเบิลคลิก
+    </div>
+    <div class="main-head">
+      <div>
+        <h1 id="pageTitle">รายได้ สปสช.</h1>
+        <div class="sub" id="pageSub">ข้อมูลดึงสดจาก Google Sheet ของกลุ่มงาน</div>
+      </div>
+      <div class="head-actions">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="searchInput" type="text" placeholder="ค้นหากองทุน...">
+        </div>
+        <button class="btn" id="toggleTableBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          ดูตารางข้อมูล
+        </button>
+        <button class="btn" id="debugBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18M3 9v10a2 2 0 002 2h4M21 9v10a2 2 0 01-2 2h-4"/></svg>
+          ดูข้อมูลดิบ
+        </button>
+        <button class="btn" id="refreshBtn">
+          <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          รีเฟรชตอนนี้
+        </button>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid" style="display:none;"></div>
+
+    <div class="panel" id="chartPanel" style="margin-bottom:20px;display:none;">
+      <div class="panel-title">
+        <span>สรุปผลแบบกราฟ</span>
+      </div>
+      <details class="chart-settings" id="chartSettings" open>
+        <summary>⚙️ ตั้งค่ากราฟ (เลือกตาราง / แถว / คอลัมน์)</summary>
+        <div class="chart-controls">
+          <div class="chart-field" id="chartBlockField" style="display:none;">
+            <label>ตาราง</label>
+            <select id="chartBlockSelect"></select>
+          </div>
+          <div class="chart-field">
+            <label>แกนหมวดหมู่ (X)</label>
+            <select id="chartLabelSelect"></select>
+          </div>
+          <div class="chart-field">
+            <label>ชนิดกราฟ</label>
+            <select id="chartTypeSelect">
+              <option value="bar">กราฟแท่ง</option>
+              <option value="line">กราฟเส้น</option>
+              <option value="pie">กราฟวงกลม</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-field" style="padding:0 18px 4px;">
+          <label>แถวที่จะแสดง (X) — เลือกได้หลายแถว</label>
+          <div class="multiselect" id="rowMultiselect">
+            <button type="button" class="multiselect-trigger" id="rowMultiselectTrigger">
+              <span id="rowMultiselectLabel">เลือกแถว</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="multiselect-panel">
+              <div class="chart-row-actions">
+                <button type="button" class="chip-action" id="rowSelectAllBtn">เลือกทั้งหมด</button>
+                <button type="button" class="chip-action" id="rowSelectNoneBtn">ไม่เลือกเลย</button>
+              </div>
+              <div class="chart-checklist chart-checklist-scroll" id="chartRowChecklist"></div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-field" style="padding:0 18px 14px;">
+          <label>คอลัมน์ตัวเลขที่จะแสดง (Y) — เลือกได้หลายคอลัมน์</label>
+          <div class="multiselect" id="valueMultiselect">
+            <button type="button" class="multiselect-trigger" id="valueMultiselectTrigger">
+              <span id="valueMultiselectLabel">เลือกคอลัมน์</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="multiselect-panel">
+              <div class="chart-checklist" id="chartValueChecklist"></div>
+            </div>
+          </div>
+        </div>
+      </details>
+      <div class="chart-canvas-row">
+        <div class="chart-canvas-wrap chart-canvas-main">
+          <div class="empty-state" id="chartEmptyState" style="padding:40px 20px;">
+            <div class="icon">📊</div>
+            <h3>เลือกคอลัมน์ตัวเลขอย่างน้อย 1 คอลัมน์</h3>
+            <p>เลือกจาก "⚙️ ตั้งค่ากราฟ" ด้านบนเพื่อสร้างกราฟจากข้อมูลในตารางนี้</p>
+          </div>
+          <canvas id="chartCanvas" style="display:none;"></canvas>
+        </div>
+        <div class="chart-canvas-wrap chart-canvas-donut" id="donutWrap" style="display:none;">
+          <div class="donut-title">สัดส่วนรวม</div>
+          <canvas id="donutCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tablePanel" style="display:none;">
+      <div class="panel-title">
+        <span id="panelTitle">ตารางข้อมูล</span>
+        <span class="status-tag" id="statusTag"><span class="dot"></span><span id="statusText">ยังไม่ได้เชื่อมต่อ</span></span>
+      </div>
+      <div id="panelBody"></div>
+      <div class="foot-note" id="footNote"></div>
+    </div>
+  </main>
+
+</div>
+
+<!-- ---------- Settings modal ---------- -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>เชื่อมต่อแหล่งข้อมูล</h2>
+    <p class="hint">เลือกว่าจะให้ระบบดึงข้อมูลจาก Google Sheet ออนไลน์ หรือจากไฟล์ Excel ในเครื่อง</p>
+
+    <div class="field">
+      <label>แหล่งข้อมูล</label>
+      <div class="source-toggle">
+        <label class="source-opt"><input type="radio" name="dataSource" value="sheet" id="srcSheet"> Google Sheet ออนไลน์</label>
+        <label class="source-opt"><input type="radio" name="dataSource" value="local" id="srcLocal"> ไฟล์ Excel ในเครื่อง</label>
+      </div>
+    </div>
+
+    <div id="sheetFields">
+      <div class="field">
+        <label>Spreadsheet ID</label>
+        <input id="sheetIdInput" type="text" placeholder="เช่น 1AbCдEfGhIjKlmNoPQRstuVWxyz1234567890">
+      </div>
+      <div class="modal-note">
+        ต้องตั้งค่าการแชร์ไฟล์เป็น <b>"ทุกคนที่มีลิงก์ – ดูได้ (Viewer)"</b> ก่อน และชื่อแท็บใน Sheet ควรตรงกับชื่อหมวดในเมนู
+      </div>
+    </div>
+
+    <div id="localFields" style="display:none;">
+      <div class="field">
+        <label>ไฟล์ Excel</label>
+        <button class="btn" id="pickFileBtn" style="width:100%;justify-content:center;">📂 เลือกไฟล์ .xlsx</button>
+        <div id="pickedFileName" class="modal-note" style="margin-top:8px;">ยังไม่ได้เลือกไฟล์</div>
+      </div>
+      <div class="modal-note">
+        ชื่อแท็บ (sheet) ในไฟล์ควรตรงกับชื่อหมวดในเมนูซ้าย เช่น "รายได้ สปสช.", "EMS" ฯลฯ<br><br>
+        <span id="fsaSupportNote"></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>ความถี่ในการรีเฟรชอัตโนมัติ</label>
+      <select id="intervalSelect">
+        <option value="30000">ทุก 30 วินาที</option>
+        <option value="60000" selected>ทุก 1 นาที</option>
+        <option value="300000">ทุก 5 นาที</option>
+        <option value="0">ปิดการรีเฟรชอัตโนมัติ</option>
+      </select>
+    </div>
+    <div class="modal-note">
+      หมายเหตุ: การตั้งค่านี้จำไว้เฉพาะตอนเปิดหน้านี้อยู่เท่านั้น (ปิดหน้าเว็บแล้วต้องตั้งใหม่) — ถ้าต้องการให้ Spreadsheet ID ติดถาวร ให้ใส่ค่าที่ <code class="mono">CONFIG.SPREADSHEET_ID</code> ในโค้ดแทน
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelSettings">ยกเลิก</button>
+      <button class="btn primary" id="saveSettings">เชื่อมต่อ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+/* =========================================================================
+   CONFIG — ถ้าต้องการให้ Spreadsheet ID ติดมากับไฟล์ถาวร (ไม่ต้องกรอกทุกครั้ง)
+   ให้ใส่ค่าตรงนี้แทนช่องว่าง แล้วเซฟไฟล์ใหม่
+   ========================================================================= */
+const CONFIG = {
+  SPREADSHEET_ID: '1yBSnSi38E2TN2kqxDU8y11--1xfFR0z41ye6Pc9KPnE',
+  REFRESH_MS: 60000,
+};
+
+/* ชื่อหมวด = ชื่อแท็บใน Google Sheet ตรวจสอบกับไฟล์จริงแล้ว (จัดเก็บรายได้ทุกรายการ-ปีงบ 69)
+   ถ้าเปลี่ยนชื่อแท็บในอนาคต ให้แก้ค่าฝั่งขวาของ map นี้ให้ตรงกัน */
+const sheetNameMap = {
+  "รายได้ สปสช.": "รายได้ สปสช.",
+  "ลูกหนี้ค่ารักษา": "ลูกหนี้ค่ารักษา",
+  "PP Fs รายหน่วยบริการ": "PP Fs รายหน่วยบริการ",
+  "ประกันสังคม": "ประกันสังคม",
+  "เบิกได้": "เบิกได้",
+  "เงินสด": "เงินสด",
+  "ประกันสุขภาพต่างด้าว": "ประกันสุขภาพต่างด้าว",
+  "พรบ.": "พรบ.",
+  "บุคคลไร้สถานะและสิทธิ์": "บุคคลไร้สถานะและสิทธิ์",
+  "Vaccine": "Vaccine",
+  "ข้อมูลผู้ป่วย": "ข้อมูลผู้ป่วย",
+  "EMS": "EMS",
+  "PP free": "PP free",
+  "สังคมสงเคราะห์": "สังคมสงเคราะห์",
+  "Palliative Care(mis)*": "Palliative Care(mis)*",
+  "อุปกรณ์เทียม (mis)": "อุปกรณ์เทียม (mis)",
+  "seamless, HC FS": "seamless, HC FS",
+  "OPD": "OPD",
+  "IPD": "IPD",
+  "Dent": "Dent"
+};
+const categories = Object.keys(sheetNameMap);
+
+/* ---------- runtime state (in-memory only, resets on page reload) ---------- */
+let state = {
+  dataSource: 'sheet',   // 'sheet' | 'local'
+  spreadsheetId: CONFIG.SPREADSHEET_ID || '',
+  refreshMs: CONFIG.REFRESH_MS,
+  activeCategory: categories[0],
+  cache: {},          // cat -> {columns, rows}
+  status: {},         // cat -> 'idle' | 'loading' | 'live' | 'error'
+  errorMsg: {},
+  lastUpdated: {},
+  timer: null,
+  debugMode: false,
+  tableVisible: false,
+  // local-file mode
+  fileHandle: null,      // FileSystemFileHandle, when supported
+  localFile: null,       // plain File, fallback path
+  fileName: '',
+  fileLastModified: 0,
+  workbook: null,        // cached parsed XLSX workbook
+  // chart summary
+  chart: {
+    blocks: [],        // resolved blocks for the active category
+    blockIndex: 0,
+    labelCol: 0,
+    rowSelection: null, // indices into getEligibleRows(block) that are checked; null = not yet initialized
+    valueCols: [],     // array of column indices
+    type: 'bar',
+    instance: null,    // Chart.js instance
+    donutInstance: null,
+  },
+};
+
+const fmt = n => {
+  if (typeof n !== 'number' || Number.isNaN(n)) return n;
+  return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+};
+
+/* ---------- minimal CSV parser (handles quoted fields with commas) ---------- */
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i=0;i<text.length;i++){
+    const c = text[i];
+    if (inQuotes){
+      if (c === '"'){
+        if (text[i+1] === '"'){ field += '"'; i++; } else { inQuotes = false; }
+      } else if (c === '\r'){ /* skip stray CR inside quoted multi-line cells */ }
+      else field += c;
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ','){ row.push(field); field=''; }
+      else if (c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else if (c === '\r'){ /* skip */ }
+      else field += c;
+    }
+  }
+  if (field.length || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+function isNumericStr(v){
+  const t = String(v ?? '').trim().replace(/,/g,'');
+  if (t === '') return false;
+  return /^-?\d+(\.\d+)?$/.test(t);
+}
+function toNumberIfNumeric(v){
+  if (v === null || v === undefined) return v;
+  const t = String(v).trim().replace(/,/g,'');
+  if (t === '') return '';
+  if (/^-?\d+(\.\d+)?$/.test(t)) return parseFloat(t);
+  return v;
+}
+
+/* ---------- fetch a sheet tab as CSV via Google's gviz endpoint ---------- */
+async function fetchSheetTab(spreadsheetId, sheetName){
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url, {cache:'no-store'});
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  if (/^\s*<HTML/i.test(text)) throw new Error('ไม่พบชีตหรือไม่มีสิทธิ์เข้าถึง');
+  const matrix = parseCSV(text);
+  if (!matrix.length) throw new Error('ไม่มีข้อมูลในแท็บนี้');
+  return {matrix};
+}
+
+const FSA_SUPPORTED = 'showOpenFilePicker' in window;
+
+/* ---------- local file picking ---------- */
+async function pickLocalFile(){
+  if (FSA_SUPPORTED){
+    const [handle] = await window.showOpenFilePicker({
+      types: [{description: 'Excel files', accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'], 'application/vnd.ms-excel': ['.xls']}}],
+      excludeAcceptAllOption: false,
+      multiple: false,
+    });
+    state.fileHandle = handle;
+    state.localFile = null;
+    const file = await handle.getFile();
+    state.fileName = file.name;
+    state.fileLastModified = file.lastModified;
+    state.workbook = null; // force reparse
+    return file;
+  } else {
+    return new Promise((resolve, reject) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.xlsx,.xls';
+      input.onchange = () => {
+        const file = input.files[0];
+        if (!file){ reject(new Error('ไม่ได้เลือกไฟล์')); return; }
+        state.fileHandle = null;
+        state.localFile = file;
+        state.fileName = file.name;
+        state.fileLastModified = file.lastModified;
+        state.workbook = null;
+        resolve(file);
+      };
+      input.click();
+    });
+  }
+}
+
+/* re-read the picked file if it changed on disk (FSA mode only detects this
+   automatically; fallback mode just re-uses whatever was last picked) */
+async function ensureWorkbookLoaded(){
+  let file = state.localFile;
+  if (state.fileHandle){
+    file = await state.fileHandle.getFile();
+    if (state.workbook && file.lastModified === state.fileLastModified){
+      return state.workbook; // unchanged, reuse cache
+    }
+    state.fileLastModified = file.lastModified;
+  } else if (state.workbook){
+    return state.workbook; // fallback mode: no way to detect changes, reuse until re-picked
+  }
+  if (!file) throw new Error('ยังไม่ได้เลือกไฟล์ Excel');
+  const buf = await file.arrayBuffer();
+  state.workbook = XLSX.read(buf, {type:'array', cellText:false, cellDates:false});
+  return state.workbook;
+}
+
+function matrixFromLocalWorkbook(workbook, sheetName){
+  const actualName = workbook.SheetNames.find(n => n.trim() === sheetName.trim()) || workbook.SheetNames.find(n => n.trim().toLowerCase() === sheetName.trim().toLowerCase());
+  if (!actualName) throw new Error(`ไม่พบแท็บ "${sheetName}" ในไฟล์ (แท็บที่มี: ${workbook.SheetNames.join(', ')})`);
+  const sheet = workbook.Sheets[actualName];
+  const matrix = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:''});
+  if (!matrix.length) throw new Error('ไม่มีข้อมูลในแท็บนี้');
+  return matrix.map(row => row.map(c => c === null || c === undefined ? '' : String(c)));
+}
+
+/* ---------- unified loader: routes to Google Sheet or local file ---------- */
+async function loadCategoryMatrix(cat){
+  if (state.dataSource === 'local'){
+    const wb = await ensureWorkbookLoaded();
+    return {matrix: matrixFromLocalWorkbook(wb, sheetNameMap[cat])};
+  }
+  return fetchSheetTab(state.spreadsheetId, sheetNameMap[cat]);
+}
+
+/* ---------- split a raw sheet matrix into separate sub-tables ----------
+   Heuristic: a fully blank row ends the current block. Inside a block, leading
+   rows with only 1-2 filled cells are treated as a title/subtitle line (rendered
+   as a heading, not a table row). After that, consecutive non-numeric rows are
+   treated as (possibly stacked/merged) header rows; the rest are data rows. */
+/* a single physical row can contain cells with embedded line breaks (Alt+Enter in
+   Google Sheets) that are meant to look like several stacked header rows. Detect
+   that and split it: if the topmost line is filled in only one column, treat it as
+   the table's title and use the remaining lines as the real (stacked) header. */
+function expandMultilineHeaderRow(row){
+  const cells = row.map(c => String(c ?? '').split(/\r\n|\r|\n/));
+  const maxLines = Math.max(...cells.map(l => l.length), 1);
+  if (maxLines <= 1) return {titleLine: null, headerLines: [row]};
+  // bottom-align: pad shorter cells at the top, so each cell's last line lines up
+  const padded = cells.map(lines => {
+    const pad = maxLines - lines.length;
+    return Array(pad).fill('').concat(lines);
+  });
+  const level0 = padded.map(l => l[0]);
+  const filledLevel0 = level0.filter(v => v.trim() !== '');
+  let titleLine = null, startLevel = 0;
+  if (filledLevel0.length === 1){
+    titleLine = filledLevel0[0];
+    startLevel = 1;
+  }
+  const headerLines = [];
+  for (let lvl = startLevel; lvl < maxLines; lvl++){
+    headerLines.push(padded.map(l => l[lvl]));
+  }
+  return {titleLine, headerLines};
+}
+
+function splitIntoBlocks(matrix){
+  const isBlank = row => row.every(c => String(c).trim() === '');
+  const blocks = [];
+  let cur = null;
+
+  const pushCur = () => { if (cur && (cur.titles.length || cur.header.length || cur.rows.length)) blocks.push(cur); cur = null; };
+
+  for (const row of matrix){
+    if (isBlank(row)){ pushCur(); continue; }
+    if (!cur) cur = {titles: [], header: [], rows: []};
+
+    const filled = row.filter(c => String(c).trim() !== '');
+    const numericCount = row.filter(c => isNumericStr(c)).length;
+    const mostlyNumeric = numericCount > 0 && (numericCount / filled.length) >= 0.4;
+
+    if (cur.rows.length === 0 && !mostlyNumeric){
+      const hasMultiline = row.some(c => /\r\n|\r|\n/.test(String(c ?? '')));
+      if (hasMultiline){
+        const {titleLine, headerLines} = expandMultilineHeaderRow(row);
+        if (titleLine){
+          cur.titles.push([titleLine]);
+        }
+        headerLines.forEach(hl => cur.header.push(hl));
+      } else if (filled.length === 1 && cur.header.length === 0){
+        cur.titles.push(row);
+      } else {
+        cur.header.push(forwardFillRow(row));
+      }
+    } else {
+      cur.rows.push(row);
+    }
+  }
+  pushCur();
+  return blocks;
+}
+
+/* approximate a real merged/spanned group-header row's colspan by carrying each
+   label rightward across the blanks that followed it (only used for genuine
+   multi-column header rows, not for multiline-expanded virtual levels) */
+function forwardFillRow(row){
+  const out = [];
+  let last = '';
+  for (let i=0;i<row.length;i++){
+    const v = String(row[i] ?? '').trim();
+    if (v) last = v;
+    out.push(v || last);
+  }
+  return out;
+}
+
+/* build final column header labels by vertically joining each already-resolved
+   header row (blanks here mean "no label at this level for this column") */
+function buildHeaderLabels(headerRows, width){
+  if (!headerRows.length) return null;
+  const labels = [];
+  for (let c=0;c<width;c++){
+    const parts = [];
+    headerRows.forEach(r => {
+      const v = String(r[c] ?? '').trim();
+      if (v && parts[parts.length-1] !== v) parts.push(v);
+    });
+    labels.push(parts.length ? parts.join(' · ') : `คอลัมน์ ${c+1}`);
+  }
+  return labels;
+}
+
+/* ---------- sidebar ---------- */
+const navGroup = document.getElementById('navGroup');
+categories.forEach(cat => {
+  const el = document.createElement('div');
+  el.className = 'nav-item' + (cat === state.activeCategory ? ' active' : '');
+  el.dataset.cat = cat;
+  el.innerHTML = `<span class="dot"></span><span style="flex:1">${cat}</span>`;
+  el.addEventListener('click', () => selectCategory(cat));
+  navGroup.appendChild(el);
+});
+
+function updateNavDots(){
+  categories.forEach(cat => {
+    const el = navGroup.querySelector(`[data-cat="${CSS.escape(cat)}"]`);
+    if (!el) return;
+    const dot = el.querySelector('.dot, .live-dot');
+    const st = state.status[cat];
+    const isLive = st === 'live';
+    dot.className = isLive ? 'live-dot' : 'dot';
+  });
+}
+
+function selectCategory(cat){
+  state.activeCategory = cat;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.cat === cat));
+  document.getElementById('pageTitle').textContent = cat;
+  document.getElementById('searchInput').value = '';
+  loadCategory(cat);
+}
+
+/* ---------- load + render ---------- */
+async function loadCategory(cat, {silent} = {}){
+  const hasSource = state.dataSource === 'local' ? !!(state.fileHandle || state.localFile) : !!state.spreadsheetId;
+  if (!hasSource){
+    render();
+    return;
+  }
+  if (!silent){
+    state.status[cat] = 'loading';
+    render();
+  }
+  try{
+    const data = await loadCategoryMatrix(cat);
+    state.cache[cat] = data;
+    state.status[cat] = 'live';
+    state.errorMsg[cat] = '';
+    state.lastUpdated[cat] = new Date();
+    onCategoryDataLoaded(cat, data.matrix);
+  } catch(err){
+    state.status[cat] = 'error';
+    state.errorMsg[cat] = err.message || 'เชื่อมต่อไม่สำเร็จ';
+  }
+  render();
+}
+
+function render(){
+  const body = document.getElementById('panelBody');
+  const foot = document.getElementById('footNote');
+  const statusTag = document.getElementById('statusTag');
+  const statusText = document.getElementById('statusText');
+  const cat = state.activeCategory;
+
+  updateNavDots();
+  updateToggleTableBtnLabel();
+
+  if (!(state.dataSource === 'local' ? (state.fileHandle || state.localFile) : state.spreadsheetId)){
+    document.getElementById('chartPanel').style.display = 'none';
+    document.getElementById('kpiGrid').style.display = 'none';
+    document.getElementById('tablePanel').style.display = '';
+    statusTag.className = 'status-tag';
+    statusText.textContent = 'ยังไม่ได้เชื่อมต่อ';
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🔗</div>
+        <h3>ยังไม่ได้เชื่อมต่อแหล่งข้อมูล</h3>
+        <p>กดปุ่ม "เชื่อมต่อแหล่งข้อมูล" มุมล่างซ้าย แล้วเลือก Google Sheet ออนไลน์ หรือไฟล์ Excel ในเครื่อง เพื่อดึงข้อมูลของหมวด "${cat}"</p>
+      </div>`;
+    foot.textContent = '';
+    return;
+  }
+
+  const st = state.status[cat];
+
+  if (st === 'loading'){
+    document.getElementById('chartPanel').style.display = 'none';
+    document.getElementById('kpiGrid').style.display = 'none';
+    document.getElementById('tablePanel').style.display = '';
+    statusTag.className = 'status-tag loading';
+    statusText.textContent = 'กำลังโหลด...';
+    body.innerHTML = `<div class="loading-state"><div class="icon">⏳</div><p>กำลังดึงข้อมูลจาก Google Sheet…</p></div>`;
+    foot.textContent = '';
+    return;
+  }
+
+  if (st === 'error'){
+    document.getElementById('chartPanel').style.display = 'none';
+    document.getElementById('kpiGrid').style.display = 'none';
+    document.getElementById('tablePanel').style.display = '';
+    statusTag.className = 'status-tag error';
+    statusText.textContent = 'เชื่อมต่อไม่สำเร็จ';
+    const isFileProtocol = window.location.protocol === 'file:';
+    const looksLikeGenericFetchFail = /failed to fetch/i.test(state.errorMsg[cat] || '');
+    if (isFileProtocol && looksLikeGenericFetchFail){
+      body.innerHTML = `
+        <div class="error-state">
+          <div class="icon">⚠️</div>
+          <h3>เปิดไฟล์แบบ file:// อยู่ — เบราว์เซอร์บล็อกการเชื่อมต่อ</h3>
+          <p>ดูคำอธิบายและวิธีแก้ในกล่องสีส้มด้านบน</p>
+        </div>`;
+    } else {
+      body.innerHTML = `
+        <div class="error-state">
+          <div class="icon">⚠️</div>
+          <h3>ดึงข้อมูลหมวด "${cat}" ไม่สำเร็จ</h3>
+          <p><code>${state.errorMsg[cat]}</code></p>
+          <p style="margin-top:8px">ตรวจสอบว่า 1) แชร์ไฟล์เป็น "ทุกคนที่มีลิงก์ – ดูได้" แล้ว และ 2) มีแท็บชื่อ "${sheetNameMap[cat]}" อยู่จริงในไฟล์</p>
+        </div>`;
+    }
+    foot.textContent = '';
+    return;
+  }
+
+  const data = state.cache[cat];
+  if (!data){
+    document.getElementById('chartPanel').style.display = 'none';
+    document.getElementById('kpiGrid').style.display = 'none';
+    document.getElementById('tablePanel').style.display = '';
+    statusTag.className = 'status-tag';
+    statusText.textContent = 'ไม่มีข้อมูล';
+    body.innerHTML = `<div class="empty-state"><div class="icon">📄</div><h3>ยังไม่มีข้อมูล</h3></div>`;
+    foot.textContent = '';
+    return;
+  }
+
+  document.getElementById('chartPanel').style.display = state.debugMode ? 'none' : '';
+  document.getElementById('kpiGrid').style.display = state.debugMode ? 'none' : '';
+  document.getElementById('tablePanel').style.display = (state.debugMode || state.tableVisible) ? '' : 'none';
+  statusTag.className = 'status-tag live';
+  statusText.textContent = 'เชื่อมต่อสด';
+  body.innerHTML = state.debugMode
+    ? buildRawMatrixHtml(data.matrix)
+    : buildBlocksHtml(data.matrix, document.getElementById('searchInput').value);
+  const t = state.lastUpdated[cat];
+  const sourceLabel = state.dataSource === 'local'
+    ? `ไฟล์ "${escapeHtml(state.fileName)}"`
+    : `Google Sheet`;
+  foot.innerHTML = `อัปเดตล่าสุด: ${t ? t.toLocaleTimeString('th-TH') : '-'} · ดึงข้อมูลจากแท็บ "${sheetNameMap[cat]}" ใน${sourceLabel} อัตโนมัติทุก ${state.refreshMs ? (state.refreshMs/1000)+' วินาที' : '(ปิดอยู่)'}`;
+}
+
+function updateToggleTableBtnLabel(){
+  const btn = document.getElementById('toggleTableBtn');
+  if (!btn) return;
+  const label = btn.querySelector('span') || btn;
+  const text = state.tableVisible ? 'ซ่อนตารางข้อมูล' : 'ดูตารางข้อมูล';
+  // preserve the svg icon, only replace the trailing text node
+  let textNode = [...btn.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+  if (textNode) textNode.textContent = ' ' + text;
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeHtmlML(s){
+  return escapeHtml(s).replace(/\r\n|\r|\n/g, '<br>');
+}
+
+/* find the rightmost column index that actually has content across a set of rows,
+   so a block never inherits extra empty columns from other, wider blocks in the sheet */
+function trimWidth(rows){
+  let maxIdx = -1;
+  rows.forEach(r => {
+    for (let i=r.length-1;i>=0;i--){
+      if (String(r[i] ?? '').trim() !== ''){ if (i>maxIdx) maxIdx = i; break; }
+    }
+  });
+  return maxIdx + 1;
+}
+
+function buildRawMatrixHtml(matrix){
+  const width = Math.max(...matrix.map(r => r.length), 1);
+  let html = `<div style="padding:12px 18px 0;font-size:12px;color:var(--slate)">
+    แสดงข้อมูลดิบทุกแถว/คอลัมน์ตามที่ดึงมาจาก Google Sheet โดยตรง (ช่องที่มี "·" สีจางคือช่องว่าง) — เลขแถวนับจากแถวจริงในชีต (หลังนับรวมแถวว่างด้วย)
+  </div><div class="table-scroll"><table><thead><tr><th class="mono">แถว</th>`;
+  for (let c=0;c<width;c++) html += `<th class="mono">คอลัมน์ ${c+1}</th>`;
+  html += '</tr></thead><tbody>';
+  matrix.forEach((r, i) => {
+    const blank = r.every(c => String(c ?? '').trim() === '');
+    html += `<tr style="${blank ? 'background:#fbeada' : ''}"><td class="mono">${i+1}${blank ? ' (ว่าง)':''}</td>`;
+    for (let c=0;c<width;c++){
+      const v = r[c];
+      const isEmpty = v === undefined || String(v).trim() === '';
+      html += `<td style="text-align:left" class="${isEmpty ? 'zero':''}">${isEmpty ? '·' : escapeHtml(v)}</td>`;
+    }
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+/* resolve a raw sheet matrix into ready-to-use blocks: titles (plain text lines),
+   headerLabels (one per column) and the real data rows, with width already
+   trimmed to the block's genuine data extent */
+function resolveBlocks(matrix){
+  const blocks = splitIntoBlocks(matrix);
+  return blocks.map(block => {
+    const dataWidth = trimWidth(block.rows);
+    const headerWidthRaw = trimWidth(block.header);
+    const width = dataWidth > 0 ? dataWidth : Math.max(headerWidthRaw, 1);
+    const trimmedHeaderRows = block.header.map(r => r.slice(0, width));
+    const headerLabels = buildHeaderLabels(trimmedHeaderRows, width)
+      || Array.from({length: width}, (_, c) => c === 0 ? '' : `คอลัมน์ ${c+1}`);
+    const titles = block.titles.map(t => t.find(c => String(c).trim() !== '') || '');
+    return {titles, headerLabels, width, rows: block.rows};
+  });
+}
+
+function buildBlocksHtml(matrix, filter){
+  const blocks = resolveBlocks(matrix);
+  if (!blocks.length) return `<div class="empty-state"><div class="icon">📄</div><h3>ไม่มีข้อมูลในแท็บนี้</h3></div>`;
+
+  const f = (filter || '').trim().toLowerCase();
+  let anyMatch = false;
+  let html = '<div class="blocks-wrap">';
+
+  blocks.forEach(block => {
+    const dataRows = f ? block.rows.filter(r => String(r[0] ?? '').toLowerCase().includes(f)) : block.rows;
+    if (f && !dataRows.length) return; // hide sub-tables with no match while searching
+    anyMatch = true;
+
+    html += '<div class="sub-block">';
+    if (block.titles.length){
+      html += '<div class="sub-block-titles">';
+      block.titles.forEach((text, i) => {
+        html += `<div class="${i===0 ? 't1':'t2'}">${escapeHtmlML(text)}</div>`;
+      });
+      html += '</div>';
+    }
+    if (dataRows.length){
+      html += '<div class="table-scroll"><table><thead><tr>';
+      block.headerLabels.forEach(h => html += `<th>${escapeHtmlML(h)}</th>`);
+      html += '</tr></thead><tbody>';
+      dataRows.forEach(r => {
+        const isTotalRow = /รวม|ยอดสะสม|ยอดรวม/.test(String(r[0] ?? ''));
+        html += `<tr class="${isTotalRow ? 'total':''}"><td>${escapeHtmlML(r[0] ?? '')}</td>`;
+        for (let i=1;i<block.width;i++){
+          const raw = r[i];
+          const num = toNumberIfNumeric(raw);
+          const isNum = typeof num === 'number';
+          html += `<td class="${isNum && num===0 ? 'zero':''}">${isNum ? fmt(num) : escapeHtmlML(raw ?? '')}</td>`;
+        }
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div class="no-match">ไม่มีแถวข้อมูลในตารางนี้</div>';
+    }
+    html += '</div>';
+  });
+
+  html += '</div>';
+  if (f && !anyMatch) return `<div class="empty-state"><div class="icon">🔍</div><h3>ไม่พบ "${escapeHtml(filter)}"</h3></div>`;
+  return html;
+}
+
+/* ---------- polling ---------- */
+function restartTimer(){
+  if (state.timer) clearInterval(state.timer);
+  if (state.refreshMs > 0){
+    state.timer = setInterval(() => {
+      loadCategory(state.activeCategory, {silent:true});
+    }, state.refreshMs);
+  }
+}
+
+/* ---------- events ---------- */
+/* ---------- chart summary module ---------- */
+function flattenLabel(s){
+  return String(s ?? '').replace(/\r\n|\r|\n/g, ' / ').trim();
+}
+
+function isColumnNumeric(rows, colIdx){
+  let filled = 0, numeric = 0;
+  rows.forEach(r => {
+    const v = r[colIdx];
+    const s = String(v ?? '').trim();
+    if (s === '') return;
+    filled++;
+    if (isNumericStr(s)) numeric++;
+  });
+  return filled > 0 && (numeric / filled) >= 0.6;
+}
+
+function chartPalette(i){
+  const colors = ['#14b8a6','#f97316','#0ea5e9','#f43f5e','#a855f7','#eab308','#22c55e','#ec4899'];
+  return colors[i % colors.length];
+}
+
+function getEligibleRows(block){
+  if (!block) return [];
+  return block.rows.filter(r => !/รวม|ยอดสะสม|ยอดรวม/.test(String(r[0] ?? '')));
+}
+
+function onCategoryDataLoaded(cat, matrix){
+  const blocks = resolveBlocks(matrix);
+  if (state.chart.lastCategory !== cat){
+    state.chart.blockIndex = 0;
+    state.chart.labelCol = 0;
+    state.chart.valueCols = [];
+    state.chart.rowSelection = null; // force reset to "all" below
+  }
+  state.chart.blocks = blocks;
+  state.chart.lastCategory = cat;
+  if (state.chart.blockIndex >= blocks.length) state.chart.blockIndex = 0;
+  renderChartControls();
+  renderChart();
+}
+
+function renderChartControls(){
+  const blocks = state.chart.blocks;
+  const blockField = document.getElementById('chartBlockField');
+  const blockSelect = document.getElementById('chartBlockSelect');
+
+  if (blocks.length > 1){
+    blockField.style.display = '';
+    blockSelect.innerHTML = blocks.map((b, i) => {
+      const label = b.titles.length ? b.titles.join(' · ') : `ตารางที่ ${i+1}`;
+      return `<option value="${i}">${escapeHtml(label)}</option>`;
+    }).join('');
+    blockSelect.value = String(state.chart.blockIndex);
+  } else {
+    blockField.style.display = 'none';
+  }
+
+  populateColumnPickers();
+}
+
+function populateColumnPickers(){
+  const block = state.chart.blocks[state.chart.blockIndex];
+  const labelSelect = document.getElementById('chartLabelSelect');
+  const rowChecklist = document.getElementById('chartRowChecklist');
+  const checklist = document.getElementById('chartValueChecklist');
+
+  if (!block){
+    labelSelect.innerHTML = '';
+    rowChecklist.innerHTML = '';
+    checklist.innerHTML = '';
+    updateMultiselectLabels();
+    return;
+  }
+  if (state.chart.labelCol >= block.width) state.chart.labelCol = 0;
+  state.chart.valueCols = state.chart.valueCols.filter(c => c < block.width && c !== state.chart.labelCol);
+
+  labelSelect.innerHTML = block.headerLabels.map((h, i) =>
+    `<option value="${i}">${escapeHtml(flattenLabel(h) || 'คอลัมน์ '+(i+1))}</option>`
+  ).join('');
+  labelSelect.value = String(state.chart.labelCol);
+
+  // row checklist (X axis): one entry per eligible data row, labelled using the current label column
+  const eligibleRows = getEligibleRows(block);
+  if (state.chart.rowSelection === null){
+    state.chart.rowSelection = eligibleRows.map((_, i) => i);
+  } else {
+    state.chart.rowSelection = state.chart.rowSelection.filter(i => i < eligibleRows.length);
+  }
+  rowChecklist.innerHTML = '';
+  eligibleRows.forEach((r, i) => {
+    const label = flattenLabel(r[state.chart.labelCol] ?? '') || `แถว ${i+1}`;
+    const checked = state.chart.rowSelection.includes(i);
+    const chip = document.createElement('label');
+    chip.className = 'chart-chip' + (checked ? ' checked' : '');
+    chip.innerHTML = `<input type="checkbox" data-row="${i}" ${checked ? 'checked':''}> <span>${escapeHtml(label)}</span>`;
+    rowChecklist.appendChild(chip);
+  });
+
+  checklist.innerHTML = '';
+  for (let i=0;i<block.width;i++){
+    if (i === state.chart.labelCol) continue;
+    const label = flattenLabel(block.headerLabels[i]) || `คอลัมน์ ${i+1}`;
+    const checked = state.chart.valueCols.includes(i);
+    const chip = document.createElement('label');
+    chip.className = 'chart-chip' + (checked ? ' checked' : '');
+    chip.innerHTML = `<input type="checkbox" data-col="${i}" ${checked ? 'checked':''}> <span>${escapeHtml(label)}</span>`;
+    checklist.appendChild(chip);
+  }
+
+  updateMultiselectLabels();
+}
+
+/* ---------- dropdown-style multiselect: open/close + trigger label text ---------- */
+function updateMultiselectLabels(){
+  const rowTotal = document.querySelectorAll('#chartRowChecklist input[type="checkbox"]').length;
+  const rowSelected = state.chart.rowSelection ? state.chart.rowSelection.length : 0;
+  document.getElementById('rowMultiselectLabel').textContent =
+    rowTotal === 0 ? 'ไม่มีแถวให้เลือก' : `เลือกแถวแล้ว ${rowSelected}/${rowTotal}`;
+
+  const colTotal = document.querySelectorAll('#chartValueChecklist input[type="checkbox"]').length;
+  const colSelected = state.chart.valueCols.length;
+  document.getElementById('valueMultiselectLabel').textContent =
+    colTotal === 0 ? 'ไม่มีคอลัมน์ให้เลือก' : `เลือกคอลัมน์แล้ว ${colSelected}/${colTotal}`;
+}
+
+function setupMultiselectToggle(wrapId){
+  const wrap = document.getElementById(wrapId);
+  const trigger = wrap.querySelector('.multiselect-trigger');
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = !wrap.classList.contains('open');
+    document.querySelectorAll('.multiselect.open').forEach(m => m.classList.remove('open'));
+    if (willOpen) wrap.classList.add('open');
+  });
+}
+setupMultiselectToggle('rowMultiselect');
+setupMultiselectToggle('valueMultiselect');
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.multiselect.open').forEach(m => {
+    if (!m.contains(e.target)) m.classList.remove('open');
+  });
+});
+
+function renderChart(){
+  const block = state.chart.blocks[state.chart.blockIndex];
+  const emptyState = document.getElementById('chartEmptyState');
+  const canvas = document.getElementById('chartCanvas');
+
+  if (state.chart.instance){ state.chart.instance.destroy(); state.chart.instance = null; }
+
+  if (!block || !state.chart.valueCols.length || !state.chart.rowSelection.length){
+    emptyState.style.display = '';
+    canvas.style.display = 'none';
+    document.getElementById('kpiGrid').style.display = 'none';
+    destroyDonut();
+    return;
+  }
+  emptyState.style.display = 'none';
+  canvas.style.display = '';
+
+  const eligibleRows = getEligibleRows(block);
+  const dataRows = eligibleRows.filter((_, i) => state.chart.rowSelection.includes(i));
+  const labels = dataRows.map(r => flattenLabel(r[state.chart.labelCol] ?? ''));
+  let valueCols = state.chart.valueCols;
+  let type = state.chart.type;
+
+  if (type === 'pie' && valueCols.length > 1) valueCols = [valueCols[0]];
+
+  const datasets = valueCols.map((colIdx, i) => {
+    const data = dataRows.map(r => { const n = toNumberIfNumeric(r[colIdx]); return typeof n === 'number' ? n : 0; });
+    const label = flattenLabel(block.headerLabels[colIdx]) || `คอลัมน์ ${colIdx+1}`;
+    if (type === 'pie'){
+      return {label, data, backgroundColor: labels.map((_, j) => chartPalette(j))};
+    }
+    return {
+      label, data,
+      backgroundColor: type === 'line' ? 'transparent' : chartPalette(i) + 'cc',
+      borderColor: chartPalette(i),
+      borderWidth: 2,
+      tension: 0.3,
+      fill: false,
+    };
+  });
+
+  const ctx = canvas.getContext('2d');
+  state.chart.instance = new Chart(ctx, {
+    type,
+    data: {labels, datasets},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: {boxWidth:12, font:{family:"'Noto Sans Thai', sans-serif", size:11}} } },
+      scales: type === 'pie' ? {} : {
+        y: {beginAtZero: true, ticks: {font:{family:"'IBM Plex Mono', monospace", size:10}}},
+        x: {ticks: {font:{family:"'Noto Sans Thai', sans-serif", size:10}}},
+      },
+    },
+  });
+
+  renderKpiCards(block, dataRows, state.chart.valueCols);
+  renderDonut(block, dataRows, state.chart.valueCols, type);
+}
+
+/* ---------- KPI summary cards: auto-computed (sum/max/min) per selected value column ---------- */
+function renderKpiCards(block, dataRows, valueCols){
+  const grid = document.getElementById('kpiGrid');
+  if (!valueCols.length){ grid.style.display = 'none'; return; }
+
+  const icons = ['📊','💰','📈','📉','🧾','🏥'];
+  grid.style.display = '';
+  grid.innerHTML = valueCols.map((colIdx, i) => {
+    let sum = 0, max = null, min = null, maxRow = '', minRow = '', count = 0;
+    dataRows.forEach(r => {
+      const n = toNumberIfNumeric(r[colIdx]);
+      if (typeof n !== 'number') return;
+      sum += n; count++;
+      const rowLabel = flattenLabel(r[state.chart.labelCol] ?? '');
+      if (max === null || n > max){ max = n; maxRow = rowLabel; }
+      if (min === null || n < min){ min = n; minRow = rowLabel; }
+    });
+    const label = flattenLabel(block.headerLabels[colIdx]) || `คอลัมน์ ${colIdx+1}`;
+    const color = chartPalette(i);
+    const subParts = [];
+    if (max !== null) subParts.push(`สูงสุด ${fmt(max)} (${escapeHtml(maxRow)})`);
+    if (min !== null) subParts.push(`ต่ำสุด ${fmt(min)} (${escapeHtml(minRow)})`);
+    return `
+      <div class="kpi-card" style="border-color:${color}">
+        <div class="kpi-icon">${icons[i % icons.length]}</div>
+        <div class="kpi-label">${escapeHtml(label)} · รวม ${count} แถว</div>
+        <div class="kpi-value" style="color:${color}">${fmt(sum)}</div>
+        <div class="kpi-sub">${subParts.join(' &nbsp;|&nbsp; ')}</div>
+      </div>`;
+  }).join('');
+}
+
+/* ---------- supplementary donut chart: shown when exactly 2 value columns are selected,
+   comparing their totals as a proportion (e.g. "paid vs outstanding" style pairs) ---------- */
+function destroyDonut(){
+  if (state.chart.donutInstance){ state.chart.donutInstance.destroy(); state.chart.donutInstance = null; }
+  document.getElementById('donutWrap').style.display = 'none';
+}
+
+function renderDonut(block, dataRows, valueCols, mainType){
+  destroyDonut();
+  if (valueCols.length !== 2 || mainType === 'pie') return;
+
+  const sums = valueCols.map(colIdx => {
+    let s = 0;
+    dataRows.forEach(r => { const n = toNumberIfNumeric(r[colIdx]); if (typeof n === 'number') s += n; });
+    return s;
+  });
+  if (sums.every(s => s === 0)) return;
+
+  const labels = valueCols.map(colIdx => flattenLabel(block.headerLabels[colIdx]) || 'คอลัมน์');
+  document.getElementById('donutWrap').style.display = '';
+  const ctx = document.getElementById('donutCanvas').getContext('2d');
+  state.chart.donutInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: sums, backgroundColor: [chartPalette(0), chartPalette(1)], borderWidth: 0 }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: {boxWidth:12, font:{family:"'Noto Sans Thai', sans-serif", size:11}} } },
+    },
+  });
+}
+
+document.getElementById('chartBlockSelect').addEventListener('change', (e) => {
+  state.chart.blockIndex = parseInt(e.target.value, 10);
+  state.chart.labelCol = 0;
+  state.chart.valueCols = [];
+  state.chart.rowSelection = null;
+  populateColumnPickers();
+  renderChart();
+});
+document.getElementById('chartLabelSelect').addEventListener('change', (e) => {
+  state.chart.labelCol = parseInt(e.target.value, 10);
+  populateColumnPickers();
+  renderChart();
+});
+document.getElementById('chartTypeSelect').addEventListener('change', (e) => {
+  state.chart.type = e.target.value;
+  renderChart();
+});
+document.getElementById('chartRowChecklist').addEventListener('change', (e) => {
+  const input = e.target.closest('input[type="checkbox"]');
+  if (!input) return;
+  const row = parseInt(input.dataset.row, 10);
+  if (input.checked){
+    if (!state.chart.rowSelection.includes(row)) state.chart.rowSelection.push(row);
+  } else {
+    state.chart.rowSelection = state.chart.rowSelection.filter(r => r !== row);
+  }
+  input.closest('.chart-chip').classList.toggle('checked', input.checked);
+  updateMultiselectLabels();
+  renderChart();
+});
+document.getElementById('rowSelectAllBtn').addEventListener('click', () => {
+  const block = state.chart.blocks[state.chart.blockIndex];
+  state.chart.rowSelection = getEligibleRows(block).map((_, i) => i);
+  populateColumnPickers();
+  renderChart();
+});
+document.getElementById('rowSelectNoneBtn').addEventListener('click', () => {
+  state.chart.rowSelection = [];
+  populateColumnPickers();
+  renderChart();
+});
+
+document.getElementById('chartValueChecklist').addEventListener('change', (e) => {
+  const input = e.target.closest('input[type="checkbox"]');
+  if (!input) return;
+  const col = parseInt(input.dataset.col, 10);
+  if (input.checked){
+    if (!state.chart.valueCols.includes(col)) state.chart.valueCols.push(col);
+  } else {
+    state.chart.valueCols = state.chart.valueCols.filter(c => c !== col);
+  }
+  input.closest('.chart-chip').classList.toggle('checked', input.checked);
+  updateMultiselectLabels();
+  renderChart();
+});
+
+document.getElementById('searchInput').addEventListener('input', render);
+
+document.getElementById('toggleTableBtn').addEventListener('click', () => {
+  state.tableVisible = !state.tableVisible;
+  render();
+});
+
+document.getElementById('debugBtn').addEventListener('click', () => {
+  state.debugMode = !state.debugMode;
+  document.getElementById('debugBtn').style.background = state.debugMode ? 'var(--teal-100)' : '#fff';
+  render();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  const icon = document.getElementById('refreshIcon');
+  icon.classList.add('spin');
+  loadCategory(state.activeCategory).finally(() => icon.classList.remove('spin'));
+});
+
+const overlay = document.getElementById('overlay');
+const sheetFieldsEl = document.getElementById('sheetFields');
+const localFieldsEl = document.getElementById('localFields');
+
+function syncSourceFieldsVisibility(){
+  const isLocal = document.getElementById('srcLocal').checked;
+  sheetFieldsEl.style.display = isLocal ? 'none' : 'block';
+  localFieldsEl.style.display = isLocal ? 'block' : 'none';
+}
+document.getElementById('srcSheet').addEventListener('change', syncSourceFieldsVisibility);
+document.getElementById('srcLocal').addEventListener('change', syncSourceFieldsVisibility);
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  document.getElementById('sheetIdInput').value = state.spreadsheetId;
+  document.getElementById('intervalSelect').value = String(state.refreshMs);
+  document.getElementById(state.dataSource === 'local' ? 'srcLocal' : 'srcSheet').checked = true;
+  document.getElementById('pickedFileName').textContent = state.fileName ? `เลือกไว้แล้ว: ${state.fileName}` : 'ยังไม่ได้เลือกไฟล์';
+  document.getElementById('fsaSupportNote').textContent = FSA_SUPPORTED
+    ? '✅ เบราว์เซอร์นี้รองรับการรีเฟรชอัตโนมัติเมื่อไฟล์มีการแก้ไข'
+    : '⚠️ เบราว์เซอร์นี้ไม่รองรับการรีเฟรชอัตโนมัติจากไฟล์ในเครื่อง ต้องกด "เลือกไฟล์" ใหม่เองทุกครั้งที่ไฟล์มีการอัปเดต (ลองใช้ Chrome หรือ Edge เพื่อรองรับฟีเจอร์นี้)';
+  syncSourceFieldsVisibility();
+  overlay.classList.add('open');
+});
+document.getElementById('cancelSettings').addEventListener('click', () => overlay.classList.remove('open'));
+overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+document.getElementById('pickFileBtn').addEventListener('click', async () => {
+  try{
+    const file = await pickLocalFile();
+    document.getElementById('pickedFileName').textContent = `เลือกไว้แล้ว: ${file.name}`;
+  } catch(err){
+    document.getElementById('pickedFileName').textContent = 'ยังไม่ได้เลือกไฟล์';
+  }
+});
+
+document.getElementById('saveSettings').addEventListener('click', () => {
+  state.dataSource = document.getElementById('srcLocal').checked ? 'local' : 'sheet';
+  state.spreadsheetId = document.getElementById('sheetIdInput').value.trim();
+  state.refreshMs = parseInt(document.getElementById('intervalSelect').value, 10);
+  overlay.classList.remove('open');
+  restartTimer();
+  loadCategory(state.activeCategory);
+});
+
+/* ---------- init ---------- */
+if (window.location.protocol === 'file:'){
+  document.getElementById('fileProtocolWarning').style.display = 'block';
+}
+if (state.spreadsheetId){
+  loadCategory(state.activeCategory);
+  restartTimer();
+} else {
+  render();
+}
+</script>
+</body>
+</html>
